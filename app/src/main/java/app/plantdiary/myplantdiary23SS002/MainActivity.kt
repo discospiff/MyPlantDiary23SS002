@@ -21,6 +21,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.PopupProperties
 import app.plantdiary.myplantdiary23SS002.dto.Plant
+import app.plantdiary.myplantdiary23SS002.dto.Specimen
 
 class MainActivity : ComponentActivity() {
 
@@ -49,33 +50,39 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun SpecimenFacts(plants : List<Plant> = ArrayList<Plant>()) {
-        var plantName by remember { mutableStateOf("") }
-        var location by remember { mutableStateOf("") }
-        var description by remember { mutableStateOf("") }
-        var datePlanted by remember { mutableStateOf("") }
+        var inPlantName by remember { mutableStateOf("") }
+        var inLocation by remember { mutableStateOf("") }
+        var inDescription by remember { mutableStateOf("") }
+        var inDatePlanted by remember { mutableStateOf("") }
         val context = LocalContext.current
         Column {
             TextFieldWithDropDownUsage(dataIn = plants, "Plant Name")
             OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
+                value = inLocation,
+                onValueChange = { inLocation = it },
                 label = { Text(stringResource(R.string.location)) }
             )
             OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
+                value = inDescription,
+                onValueChange = { inDescription = it },
                 label = { Text(stringResource(R.string.description)) }
             )
             OutlinedTextField(
-                value = datePlanted,
-                onValueChange = { datePlanted = it },
+                value = inDatePlanted,
+                onValueChange = { inDatePlanted = it },
                 label = { Text(stringResource(R.string.datePlanted)) }
             )
             Button(
                 onClick = {
+                    var specimen = Specimen().apply {
+                        plantName = inPlantName
+                        location = inLocation
+                        description = inDescription
+                        datePlanted = inDatePlanted
+                    }
                     Toast.makeText(
                         context,
-                        "$plantName $location $description $datePlanted",
+                        "$inPlantName $inLocation $inDescription $inDatePlanted",
                         Toast.LENGTH_LONG
                     ).show()
                 },
