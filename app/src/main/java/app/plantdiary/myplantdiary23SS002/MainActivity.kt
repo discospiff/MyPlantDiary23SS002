@@ -25,6 +25,8 @@ import app.plantdiary.myplantdiary23SS002.dto.Specimen
 
 class MainActivity : ComponentActivity() {
 
+    private var selectedPlant: Plant? = null
+
     // get our ViewModel from Koin
     private val viewModel: MainViewModel by viewModel<MainViewModel>()
 
@@ -76,6 +78,9 @@ class MainActivity : ComponentActivity() {
                 onClick = {
                     var specimen = Specimen().apply {
                         plantName = inPlantName
+                        plantId = selectedPlant?.let {
+                            it.id
+                        } ?: -1
                         location = inLocation
                         description = inDescription
                         datePlanted = inDatePlanted
@@ -161,6 +166,7 @@ class MainActivity : ComponentActivity() {
                                 TextRange(plant.toString().length)
                             )
                         )
+                        selectedPlant = plant
                     }) {
                         Text(text = plant.toString())
                     }
