@@ -1,13 +1,15 @@
 package app.plantdiary.myplantdiary23SS002
 
+import android.inputmethodservice.Keyboard
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -16,15 +18,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import app.plantdiary.myplantdiary23SS002.ui.theme.MyPlantDiaryTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
 
 class MainActivity : ComponentActivity() {
 
+    private var selectedSpecimen: Specimen? = null
     private var selectedPlant: Plant? = null
 
     // get our ViewModel from Koin
@@ -58,6 +64,11 @@ class MainActivity : ComponentActivity() {
         var inDatePlanted by remember { mutableStateOf("") }
         val context = LocalContext.current
         Column {
+            var specimens = ArrayList<Specimen>()
+            specimens.add(Specimen(plantName = "Beatiful redbud"))
+            specimens.add(Specimen(plantName = "Flowering cherry"))
+            specimens.add(Specimen(plantName = "Large red oak"))
+            SpecimenSpinner(specimens = specimens)
             TextFieldWithDropDownUsage(dataIn = plants, "Plant Name")
             OutlinedTextField(
                 value = inLocation,
@@ -94,6 +105,35 @@ class MainActivity : ComponentActivity() {
                 },
 
                 ) { Text(text = "Save") }
+        }
+    }
+
+    @Composable
+    fun SpecimenSpinner(specimens : List<Specimen>) {
+        var specimenText by remember {mutableStateOf("Specimen Collection")}
+        var expanded by remember { mutableStateOf(false) }
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Row(
+                Modifier
+                    .padding(24.dp)
+                    .clickable { expanded = !expanded }
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text (text = specimenText, fontSize = 18.sp, modifier = Modifier.padding(end=8.dp))
+                Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = "Drop down arrow")
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    specimens.forEach {
+                        specimen -> DropdownMenuItem(onClick = { expanded = false
+                        specimenText = specimen.toString()
+                        selectedSpecimen = specimen
+                    }) {
+                       Text(text = specimen.toString())
+                    }
+                    }
+                }
+            }
         }
     }
 
