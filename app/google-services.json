@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "754590174450",
+    "project_id": "my-plant-diary-23ss",
+    "storage_bucket": "my-plant-diary-23ss.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:754590174450:android:8c045e6c631b9374f1546b",
+        "android_client_info": {
+          "package_name": "app.plantdiary.myplantdiary23SS002"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "754590174450-eemtjl3aal5ovbn1fd255rdaprfs64lr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkUXqq5vV4EQ61__c9n9g1kvvdQSgtPns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "754590174450-eemtjl3aal5ovbn1fd255rdaprfs64lr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
