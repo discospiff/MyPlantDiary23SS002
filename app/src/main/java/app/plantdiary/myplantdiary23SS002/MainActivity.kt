@@ -30,7 +30,7 @@ import app.plantdiary.myplantdiary23SS002.dto.Specimen
 
 class MainActivity : ComponentActivity() {
 
-    private var selectedSpecimen: Specimen? = null
+    private var selectedSpecimen by mutableStateOf(Specimen())
     private var selectedPlant: Plant? = null
     var inPlantName : String = ""
 
@@ -60,9 +60,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun SpecimenFacts(plants : List<Plant> = ArrayList<Plant>()) {
 
-        var inLocation by remember { mutableStateOf("") }
-        var inDescription by remember { mutableStateOf("") }
-        var inDatePlanted by remember { mutableStateOf("") }
+        var inLocation by remember(selectedSpecimen.specimenId) { mutableStateOf(selectedSpecimen.location) }
+        var inDescription by remember(selectedSpecimen.specimenId) { mutableStateOf(selectedSpecimen.description) }
+        var inDatePlanted by remember(selectedSpecimen.specimenId) { mutableStateOf(selectedSpecimen.datePlanted) }
         val context = LocalContext.current
         Column {
             val specimens by viewModel.specimens.observeAsState(initial = emptyList())
@@ -138,9 +138,9 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun TextFieldWithDropDownUsage(dataIn: List<Plant>, label: String = "", take: Int = 3) {
-        val dropDownOptions =remember {mutableStateOf(listOf<Plant>())}
-        val textFieldValue = remember {mutableStateOf(TextFieldValue())}
-        val dropDownExpanded = remember {mutableStateOf(false)}
+        val dropDownOptions =remember() {mutableStateOf(listOf<Plant>())}
+        val textFieldValue = remember(selectedSpecimen.specimenId) {mutableStateOf(TextFieldValue(selectedSpecimen.plantName))}
+        val dropDownExpanded = remember() {mutableStateOf(false)}
         fun onDropdownDismissRequest() {
             dropDownExpanded.value = false
         }
