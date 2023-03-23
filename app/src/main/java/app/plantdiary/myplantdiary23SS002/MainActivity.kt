@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
     private var selectedSpecimen: Specimen? = null
     private var selectedPlant: Plant? = null
+    var inPlantName : String = ""
 
     // get our ViewModel from Koin
     private val viewModel: MainViewModel by viewModel<MainViewModel>()
@@ -58,16 +59,14 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun SpecimenFacts(plants : List<Plant> = ArrayList<Plant>()) {
-        var inPlantName by remember { mutableStateOf("") }
+
         var inLocation by remember { mutableStateOf("") }
         var inDescription by remember { mutableStateOf("") }
         var inDatePlanted by remember { mutableStateOf("") }
         val context = LocalContext.current
         Column {
-            var specimens = ArrayList<Specimen>()
-            specimens.add(Specimen(plantName = "Beatiful redbud"))
-            specimens.add(Specimen(plantName = "Flowering cherry"))
-            specimens.add(Specimen(plantName = "Large red oak"))
+            val specimens by viewModel.specimens.observeAsState(initial = emptyList())
+
             SpecimenSpinner(specimens = specimens)
             TextFieldWithDropDownUsage(dataIn = plants, "Plant Name")
             OutlinedTextField(
@@ -147,6 +146,7 @@ class MainActivity : ComponentActivity() {
         }
 
         fun onValueChanged(value: TextFieldValue) {
+            inPlantName = value.text
             dropDownExpanded.value = true
             textFieldValue.value = value
             dropDownOptions.value = dataIn.filter {
