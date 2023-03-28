@@ -30,7 +30,6 @@ import app.plantdiary.myplantdiary23SS002.dto.Specimen
 
 class MainActivity : ComponentActivity() {
 
-    private var selectedSpecimen by mutableStateOf(Specimen())
     private var selectedPlant: Plant? = null
     var inPlantName : String = ""
 
@@ -60,9 +59,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun SpecimenFacts(plants : List<Plant> = ArrayList<Plant>()) {
 
-        var inLocation by remember(selectedSpecimen.specimenId) { mutableStateOf(selectedSpecimen.location) }
-        var inDescription by remember(selectedSpecimen.specimenId) { mutableStateOf(selectedSpecimen.description) }
-        var inDatePlanted by remember(selectedSpecimen.specimenId) { mutableStateOf(selectedSpecimen.datePlanted) }
+        var inLocation by remember(viewModel.selectedSpecimen.specimenId) { mutableStateOf(viewModel.selectedSpecimen.location) }
+        var inDescription by remember(viewModel.selectedSpecimen.specimenId) { mutableStateOf(viewModel.selectedSpecimen.description) }
+        var inDatePlanted by remember(viewModel.selectedSpecimen.specimenId) { mutableStateOf(viewModel.selectedSpecimen.datePlanted) }
         val context = LocalContext.current
         Column {
             val specimens by viewModel.specimens.observeAsState(initial = emptyList())
@@ -86,7 +85,7 @@ class MainActivity : ComponentActivity() {
             )
             Button(
                 onClick = {
-                    selectedSpecimen.apply {
+                    viewModel.selectedSpecimen.apply {
                         plantName = inPlantName
                         plantId = selectedPlant?.let {
                             it.id
@@ -95,7 +94,7 @@ class MainActivity : ComponentActivity() {
                         description = inDescription
                         datePlanted = inDatePlanted
                     }
-                    viewModel.save(selectedSpecimen)
+                    viewModel.save()
                     Toast.makeText(
                         context,
                         "$inPlantName $inLocation $inDescription $inDatePlanted",
@@ -125,8 +124,13 @@ class MainActivity : ComponentActivity() {
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     specimens.forEach {
                         specimen -> DropdownMenuItem(onClick = { expanded = false
-                        specimenText = specimen.toString()
-                        selectedSpecimen = specimen
+                        if (specimen.plantName == viewModel.NEW_SPECIMEN) {
+                            specimenText = ""
+                            specimen.plantName = ""
+                        } else {
+                            specimenText = specimen.toString()
+                        }
+                        viewModel.selectedSpecimen = specimen
                     }) {
                        Text(text = specimen.toString())
                     }
@@ -139,7 +143,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun TextFieldWithDropDownUsage(dataIn: List<Plant>, label: String = "", take: Int = 3) {
         val dropDownOptions =remember() {mutableStateOf(listOf<Plant>())}
-        val textFieldValue = remember(selectedSpecimen.specimenId) {mutableStateOf(TextFieldValue(selectedSpecimen.plantName))}
+        val textFieldValue = remember(viewModel.selectedSpecimen.specimenId) {mutableStateOf(TextFieldValue(viewModel.selectedSpecimen.plantName))}
         val dropDownExpanded = remember() {mutableStateOf(false)}
         fun onDropdownDismissRequest() {
             dropDownExpanded.value = false
