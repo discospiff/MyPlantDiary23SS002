@@ -2,6 +2,7 @@ package app.plantdiary.myplantdiary23SS002
 
 import android.inputmethodservice.Keyboard
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,9 +28,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
+import app.plantdiary.myplantdiary23SS002.dto.User
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 class MainActivity : ComponentActivity() {
 
+    private var firebaseUser: FirebaseUser? = FirebaseAuth.getInstance().currentUser
     private var selectedPlant: Plant? = null
     var inPlantName : String = ""
 
@@ -40,6 +48,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             viewModel.fetchPlants()
+            firebaseUser?.let {
+                var user = User (it.uid, it.displayName)
+                viewModel.user = user
+                viewModel.listenToSpecimens()
+            }
             val plants by viewModel.plants.observeAsState(initial = emptyList())
             MyPlantDiaryTheme {
                 // A surface container using the 'background' color from the theme
@@ -103,6 +116,52 @@ class MainActivity : ComponentActivity() {
                 },
 
                 ) { Text(text = "Save") }
+            Button (
+                onClick = {
+                    signIn()
+                }
+                    ) {
+                Text (text = "Logon")
+            }
+        }
+    }
+
+    private fun signIn() {
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.EmailBuilder().build(),
+            AuthUI.IdpConfig.GoogleBuilder().build()
+        )
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .build()
+
+        signInLauncher.launch(signInIntent)
+    }
+
+    private val signInLauncher = registerForActivityResult(FirebaseAuthUIActivityResultContract()) {
+        signInResult(it)
+    }
+
+    /**
+     * Handle logged in user.
+     */
+    private fun signInResult(result: FirebaseAuthUIAuthenticationResult?) {
+        result?.let{
+                result ->
+                val response = result.idpResponse
+
+                if (result.resultCode == RESULT_OK) {
+                    firebaseUser = FirebaseAuth.getInstance().currentUser
+                    firebaseUser?.let {
+                        val user = User(it.uid, it.displayName)
+                        viewModel.user = user
+                        viewModel.saveUser()
+                        viewModel.listenToSpecimens()
+                    }
+                } else {
+                    Log.e("MainActivity.kt", "Error logging in: " + response?.error?.errorCode)
+                }
         }
     }
 

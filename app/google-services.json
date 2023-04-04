@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "754590174450-eemtjl3aal5ovbn1fd255rdaprfs64lr.apps.googleusercontent.com",
+          "client_id": "754590174450-3h3j2hbvr9iubvd2sb5qe3fdrgnoqfcm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.plantdiary.myplantdiary23SS002",
+            "certificate_hash": "372c36260546179c5e586e4ce0dff625d1eb024b"
+          }
+        },
+        {
+          "client_id": "754590174450-j8cbagu3dor9upq91uq6a43ek27p1edq.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
