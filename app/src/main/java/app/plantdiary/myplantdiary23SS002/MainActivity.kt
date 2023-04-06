@@ -1,11 +1,14 @@
 package app.plantdiary.myplantdiary23SS002
 
+import android.Manifest
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.inputmethodservice.Keyboard
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.content.ContextCompat
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
 import app.plantdiary.myplantdiary23SS002.dto.User
@@ -123,8 +127,53 @@ class MainActivity : ComponentActivity() {
                     ) {
                 Text (text = "Logon")
             }
+            Button (
+                onClick = {
+                    takePhoto()
+                }
+            ) {
+                Text (text = "Photo")
+            }
         }
     }
+
+    private fun takePhoto() {
+        if (hasCameraPermission() == PERMISSION_GRANTED && hasExternalStoragePermission() == PERMISSION_GRANTED) {
+            invokeCamera()
+        } else {
+            // request permissions
+            requestMultiplePermissionsLauncher.launch(arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA
+            ))
+        }
+    }
+
+    private fun invokeCamera() {
+        var i = 1 + 1
+    }
+
+    private val requestMultiplePermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()) {
+        resultsMap ->
+        var permissionGranted = false
+
+        resultsMap.forEach { permission, isGranted ->
+            if (!isGranted) {
+                return@forEach
+            }
+            permissionGranted  = isGranted
+        }
+
+        if (permissionGranted) {
+            invokeCamera()
+        } else {
+            Toast.makeText(this, "I can't take a photo if you don't give me permission", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun hasCameraPermission() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+    fun hasExternalStoragePermission() = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     private fun signIn() {
         val providers = arrayListOf(
