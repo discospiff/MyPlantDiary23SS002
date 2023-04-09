@@ -3,7 +3,9 @@ package app.plantdiary.myplantdiary23SS002
 import android.Manifest
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.inputmethodservice.Keyboard
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
 import app.plantdiary.myplantdiary23SS002.dto.User
@@ -38,9 +41,15 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : ComponentActivity() {
 
+    private var uri: Uri? = null
+    private lateinit var currentImagePath: String
     private var firebaseUser: FirebaseUser? = FirebaseAuth.getInstance().currentUser
     private var selectedPlant: Plant? = null
     var inPlantName : String = ""
@@ -150,7 +159,28 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun invokeCamera() {
-        var i = 1 + 1
+        var file = createImageFile()
+        uri =FileProvider.getUriForFile(this, "app.plantdiary.myplantdiary23SS002.fileprovider", file)
+        cameraLauncher.launch(uri)
+    }
+
+    private fun createImageFile(): File {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val imageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile("Specimen_$timestamp",
+            ".jpg",
+            imageDirectory).apply {
+                currentImagePath = absolutePath
+        }
+    }
+
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) {
+        success ->
+        if (success) {
+            Log.i("MainActivity", "Image Location $uri")
+        } else {
+            Log.e("MainActivity", "IMage not saved $uri")
+        }
     }
 
     private val requestMultiplePermissionsLauncher = registerForActivityResult(
