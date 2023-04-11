@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import app.plantdiary.myplantdiary23SS002.dto.Photo
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
 import app.plantdiary.myplantdiary23SS002.dto.User
@@ -178,6 +179,9 @@ class MainActivity : ComponentActivity() {
         success ->
         if (success) {
             Log.i("MainActivity", "Image Location $uri")
+            var strUri = uri.toString()
+            val photo = Photo(localUri = strUri)
+            viewModel.photos.add(photo)
         } else {
             Log.e("MainActivity", "IMage not saved $uri")
         }
