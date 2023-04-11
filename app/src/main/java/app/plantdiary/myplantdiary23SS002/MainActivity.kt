@@ -273,6 +273,7 @@ class MainActivity : ComponentActivity() {
                             specimenText = specimen.toString()
                         }
                         viewModel.selectedSpecimen = specimen
+                        viewModel.fetchPhotos()
                     }) {
                        Text(text = specimen.toString())
                     }

@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(var plantService : IPlantService = PlantService()) : ViewModel() {
 
-    val photos: ArrayList<Photo> = ArrayList<Photo>()
+    val photos: ArrayList<Photo> by mutableStateOf(ArrayList<Photo>())
     var user: User? = null
     internal val NEW_SPECIMEN = "NEW SPECIMEN"
     var selectedSpecimen by mutableStateOf(Specimen())
@@ -138,6 +138,27 @@ class MainViewModel(var plantService : IPlantService = PlantService()) : ViewMod
             val handle = firestore.collection("users").document(user.uid).set(user)
             handle.addOnSuccessListener { Log.d("Firebase", "Document Saved") }
             handle.addOnFailureListener { Log.e("Firebase", "Save failed $it") }
+        }
+    }
+
+    fun fetchPhotos() {
+        photos.clear()
+        user?.let {
+            user ->
+            var photoCollection = firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos")
+            var photosListener = photoCollection.addSnapshotListener {
+                querySnapshot, firebaseFirestoreException ->
+                querySnapshot?.let {
+                    querySnapshot ->
+                    var documents = querySnapshot.documents
+                    documents?.forEach {
+                        var photo = it.toObject(Photo::class.java)
+                        photo?.let {
+                            photos.add(it)
+                        }
+                    }
+                }
+            }
         }
     }
 
