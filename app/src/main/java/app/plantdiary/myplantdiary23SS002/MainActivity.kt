@@ -13,9 +13,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme.typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +40,7 @@ import app.plantdiary.myplantdiary23SS002.dto.Photo
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
 import app.plantdiary.myplantdiary23SS002.dto.User
+import coil.compose.AsyncImage
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
@@ -46,6 +50,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import androidx.compose.foundation.lazy.items
 
 class MainActivity : ComponentActivity() {
 
@@ -110,40 +115,54 @@ class MainActivity : ComponentActivity() {
                 onValueChange = { inDatePlanted = it },
                 label = { Text(stringResource(R.string.datePlanted)) }
             )
-            Button(
-                onClick = {
-                    viewModel.selectedSpecimen.apply {
-                        plantName = inPlantName
-                        plantId = selectedPlant?.let {
-                            it.id
-                        } ?: -1
-                        location = inLocation
-                        description = inDescription
-                        datePlanted = inDatePlanted
-                    }
-                    viewModel.save()
-                    Toast.makeText(
-                        context,
-                        "$inPlantName $inLocation $inDescription $inDatePlanted",
-                        Toast.LENGTH_LONG
-                    ).show()
-                },
+            Row {
+                Button(
+                    onClick = {
+                        viewModel.selectedSpecimen.apply {
+                            plantName = inPlantName
+                            plantId = selectedPlant?.let {
+                                it.id
+                            } ?: -1
+                            location = inLocation
+                            description = inDescription
+                            datePlanted = inDatePlanted
+                        }
+                        viewModel.save()
+                        Toast.makeText(
+                            context,
+                            "$inPlantName $inLocation $inDescription $inDatePlanted",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    },
 
-                ) { Text(text = "Save") }
-            Button (
-                onClick = {
-                    signIn()
+                    ) { Text(text = "Save") }
+                Button(
+                    onClick = {
+                        signIn()
+                    }
+                ) {
+                    Text(text = "Logon")
                 }
-                    ) {
-                Text (text = "Logon")
-            }
-            Button (
-                onClick = {
-                    takePhoto()
+                Button(
+                    onClick = {
+                        takePhoto()
+                    }
+                ) {
+                    Text(text = "Photo")
                 }
-            ) {
-                Text (text = "Photo")
             }
+            Events()
+        }
+    }
+
+    private @Composable
+    fun Events() {
+        val photos by viewModel.eventPhotos.observeAsState(initial = emptyList())
+        LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), modifier = Modifier.fillMaxHeight()) {
+            items (
+                items = photos,
+                itemContent = {EventListItem(photo = it)}
+            )
         }
     }
 
@@ -361,6 +380,43 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @Composable
+    fun EventListItem(photo: Photo) {
+        var inAltText by remember(photo.id) {mutableStateOf(photo.altText)}
+        Row {
+            Column(Modifier.weight(2f)) {
+                AsyncImage(model = photo.localUri, contentDescription = photo.altText, Modifier.width(64.dp).height(64.dp))
+            }
+            Column(Modifier.weight(4f)) {
+                Text(text = photo.id, style=typography.h6)
+                Text(text = photo.dateTaken.toString(), style =typography.caption)
+                OutlinedTextField(
+                    value = inAltText,
+                    onValueChange = {inAltText = it},
+                    label = {Text("Alt Text")},
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Column(Modifier.weight(1f)) {
+                Button (
+                    onClick = {
+                        photo.altText = inAltText
+                        save(photo)
+                    }) {
+                    Icon (
+                        imageVector = Icons.Filled.Check,
+                        contentDescription =  "Save",
+                        modifier = Modifier.padding(end=8.dp)
+                            )
+                }
+            }
+        }
+    }
+
+    private fun save(photo: Photo) {
+        TODO("Not yet implemented")
     }
 
 

@@ -28,6 +28,7 @@ class MainViewModel(var plantService : IPlantService = PlantService()) : ViewMod
     var selectedSpecimen by mutableStateOf(Specimen())
     var plants : MutableLiveData<List<Plant>> = MutableLiveData<List<Plant>>()
     var specimens : MutableLiveData<List<Specimen>> = MutableLiveData<List<Specimen>>()
+    val eventPhotos : MutableLiveData<List<Photo>> = MutableLiveData<List<Photo>>()
 
     private lateinit var firestore : FirebaseFirestore
     private var storageReference = FirebaseStorage.getInstance().getReference()
@@ -119,12 +120,15 @@ class MainViewModel(var plantService : IPlantService = PlantService()) : ViewMod
     private fun updatePhotoDatabase(photo: Photo) {
         user?.let {
             user ->
-            var photoCollection = firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos")
-            var handle = photoCollection.add(photo)
+            var photoDocument = if (photo.id.isEmpty()) {
+                firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos").document()
+            } else {
+                firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos").document(photo.id)
+            }
+            photo.id = photoDocument.id
+            var handle = photoDocument.set(photo)
             handle.addOnSuccessListener {
                 Log.i(TAG, "Successfully updated photo metadata")
-                photo.id = it.id
-                firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos").document(photo.id).set(photo)
             }
             handle.addOnFailureListener {
                 Log.e(TAG, "Error updating photo data: ${it.message}")
@@ -157,6 +161,7 @@ class MainViewModel(var plantService : IPlantService = PlantService()) : ViewMod
                             photos.add(it)
                         }
                     }
+                    eventPhotos.value = photos
                 }
             }
         }
