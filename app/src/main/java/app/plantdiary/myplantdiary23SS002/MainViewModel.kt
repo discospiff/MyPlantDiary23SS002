@@ -1,5 +1,7 @@
 package app.plantdiary.myplantdiary23SS002
 
+import android.content.ContentValues.TAG
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,22 +11,27 @@ import androidx.lifecycle.ViewModel
 import app.plantdiary.myplantdiary23SS002.service.IPlantService
 import app.plantdiary.myplantdiary23SS002.service.PlantService
 import androidx.lifecycle.viewModelScope
+import app.plantdiary.myplantdiary23SS002.dto.Photo
 import app.plantdiary.myplantdiary23SS002.dto.Plant
 import app.plantdiary.myplantdiary23SS002.dto.Specimen
 import app.plantdiary.myplantdiary23SS002.dto.User
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 
 class MainViewModel(var plantService : IPlantService = PlantService()) : ViewModel() {
 
+    val photos: ArrayList<Photo> by mutableStateOf(ArrayList<Photo>())
     var user: User? = null
     internal val NEW_SPECIMEN = "NEW SPECIMEN"
     var selectedSpecimen by mutableStateOf(Specimen())
     var plants : MutableLiveData<List<Plant>> = MutableLiveData<List<Plant>>()
     var specimens : MutableLiveData<List<Specimen>> = MutableLiveData<List<Specimen>>()
+    val eventPhotos : MutableLiveData<List<Photo>> = MutableLiveData<List<Photo>>()
 
     private lateinit var firestore : FirebaseFirestore
+    private var storageReference = FirebaseStorage.getInstance().getReference()
 
     init {
         firestore = FirebaseFirestore.getInstance()
@@ -78,8 +85,54 @@ class MainViewModel(var plantService : IPlantService = PlantService()) : ViewMod
                 }
             selectedSpecimen.specimenId = document.id
             val handle = document.set(selectedSpecimen)
-            handle.addOnSuccessListener { Log.d("Firebase", "Document saved") }
+            handle.addOnSuccessListener {
+                Log.d("Firebase", "Document saved")
+                if (photos.isNotEmpty()) {
+                    uploadPhotos()
+                }
+            }
             handle.addOnFailureListener { Log.e("FIrebase", "Save failed $it") }
+        }
+    }
+
+    private fun uploadPhotos() {
+        photos.forEach {
+            photo ->
+            var uri = Uri.parse(photo.localUri)
+            val imageRef = storageReference.child("images/${user?.uid}/${uri.lastPathSegment}")
+            val uploadTask = imageRef.putFile(uri)
+            uploadTask.addOnSuccessListener {
+                Log.i(TAG, "Image uploaded")
+                val downloadUrl = imageRef.downloadUrl
+                downloadUrl.addOnSuccessListener {
+                    remoteUri ->
+                    photo.remoteUri = remoteUri.toString()
+                    updatePhotoDatabase(photo)
+                }
+            }
+            uploadTask.addOnFailureListener {
+                Log.e(TAG, it.message ?: "No Message")
+            }
+
+        }
+    }
+
+    private fun updatePhotoDatabase(photo: Photo) {
+        user?.let {
+            user ->
+            var photoDocument = if (photo.id.isEmpty()) {
+                firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos").document()
+            } else {
+                firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos").document(photo.id)
+            }
+            photo.id = photoDocument.id
+            var handle = photoDocument.set(photo)
+            handle.addOnSuccessListener {
+                Log.i(TAG, "Successfully updated photo metadata")
+            }
+            handle.addOnFailureListener {
+                Log.e(TAG, "Error updating photo data: ${it.message}")
+            }
         }
     }
 
@@ -89,6 +142,28 @@ class MainViewModel(var plantService : IPlantService = PlantService()) : ViewMod
             val handle = firestore.collection("users").document(user.uid).set(user)
             handle.addOnSuccessListener { Log.d("Firebase", "Document Saved") }
             handle.addOnFailureListener { Log.e("Firebase", "Save failed $it") }
+        }
+    }
+
+    fun fetchPhotos() {
+        photos.clear()
+        user?.let {
+            user ->
+            var photoCollection = firestore.collection("users").document(user.uid).collection("specimens").document(selectedSpecimen.specimenId).collection("photos")
+            var photosListener = photoCollection.addSnapshotListener {
+                querySnapshot, firebaseFirestoreException ->
+                querySnapshot?.let {
+                    querySnapshot ->
+                    var documents = querySnapshot.documents
+                    documents?.forEach {
+                        var photo = it.toObject(Photo::class.java)
+                        photo?.let {
+                            photos.add(it)
+                        }
+                    }
+                    eventPhotos.value = photos
+                }
+            }
         }
     }
 
